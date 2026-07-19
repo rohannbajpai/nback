@@ -84,16 +84,9 @@ function Game({n,rounds,onExit,onFinish}){
  useEffect(()=>{const key=e=>{if(e.key.toLowerCase()==='a')respond('p');if(e.key.toLowerCase()==='l')respond('a');if(e.code==='Space'){e.preventDefault();state==='ready'?begin():setState(s=>s==='play'?'pause':'play')}};addEventListener('keydown',key);return()=>removeEventListener('keydown',key)},[state,trial,hits]);
  const finish=()=>{clearTimeout(timer.current);speechSynthesis.cancel();let correct=0,total=0;for(let i=n;i<seq.length;i++){for(const k of ['p','a']){const match=k==='p'?seq[i].pos===seq[i-n].pos:seq[i].letter===seq[i-n].letter;const pressed=hits[k].includes(i);if(match===pressed)correct++;total++}}onFinish({date:new Date().toISOString(),n,score:Math.round(correct/total*100),trials:rounds,time:Math.round((Date.now()-started.current)/1000)})};
  if(state==='ready')return <section className="page relative flex min-h-[calc(100vh-76px)] items-center justify-center px-6 py-12"><button className="back" onClick={onExit}><ArrowLeft/> Exit</button>
-  <div className="mx-auto flex w-full max-w-[760px] -translate-y-2 flex-col items-center text-center">
-   <span className="orbit mb-5"><Brain/></span><small>DUAL {n}-BACK</small>
-   <div className="mt-4 text-[clamp(3rem,5vw,5.25rem)] leading-[.95] font-bold tracking-[-.055em] text-[var(--text)]">Ready your focus.</div>
-   <p className="mt-5 text-sm text-[var(--muted)] sm:text-base">Position responds with your left hand. Sound responds with your right.</p>
-   <div className="mt-10 grid w-full max-w-[620px] grid-cols-2 border border-[var(--line)]">
-    <div className="flex items-center gap-4 p-5 text-left"><kbd className="grid h-11 w-11 place-items-center p-0">A</kbd><span className="flex flex-col"><b className="text-sm">Position</b><span className="text-[10px] text-[var(--muted)]">visual match</span></span></div>
-    <div className="flex items-center gap-4 border-l border-[var(--line)] p-5 text-left"><kbd className="grid h-11 w-11 place-items-center p-0">L</kbd><span className="flex flex-col"><b className="text-sm">Sound</b><span className="text-[10px] text-[var(--muted)]">audio match</span></span></div>
-   </div>
-   <button className="mt-9 flex h-14 w-56 items-center justify-center gap-3 bg-[var(--lime)] font-bold text-[var(--black)] transition-transform hover:-translate-y-0.5" onClick={begin}><Play size={18} fill="currentColor"/> Start</button>
-   <span className="mt-3 font-mono text-[9px] tracking-[.14em] text-[var(--muted)]">or press SPACE</span>
+  <div className="mx-auto flex -translate-y-4 flex-col items-center text-center">
+   <div className="text-[clamp(3rem,6vw,6rem)] leading-[.92] font-bold tracking-[-.06em] text-[var(--text)]">Ready your focus.</div>
+   <button className="mt-12 flex h-14 w-56 items-center justify-center gap-3 bg-[var(--lime)] font-bold text-[var(--black)] transition-transform hover:-translate-y-0.5" onClick={begin}><Play size={18} fill="currentColor"/> Start</button>
   </div></section>;
  return <section className="game page"><div className="game-top"><button className="back" onClick={onExit}><X/> End</button><div><small>DUAL {n}-BACK</small><b>{trial+1} <span>/ {rounds}</span></b></div><button className="icon pause" onClick={()=>setState(s=>s==='play'?'pause':'play')}>{state==='play'?<Pause/>:<Play/>}</button></div>
  <div className="progress"><i style={{width:`${(trial+1)/rounds*100}%`}}/></div><div className="arena">{state==='pause'?<div className="paused"><Pause/><h2>Paused</h2><button onClick={()=>setState('play')}>Resume</button></div>:<div className="game-grid">{[0,1,2,3,4,5,6,7,8].map(i=><i className={current?.pos===i?'lit':''}/>)}</div>}</div>
