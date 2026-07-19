@@ -96,7 +96,7 @@ function Game({n,rounds,onExit,onFinish}){
    <span className="mt-3 font-mono text-[9px] tracking-[.14em] text-[var(--muted)]">or press SPACE</span>
   </div></section>;
  return <section className="game page"><div className="game-top"><button className="back" onClick={onExit}><X/> End</button><div><small>DUAL {n}-BACK</small><b>{trial+1} <span>/ {rounds}</span></b></div><button className="icon pause" onClick={()=>setState(s=>s==='play'?'pause':'play')}>{state==='play'?<Pause/>:<Play/>}</button></div>
- <div className="progress"><i style={{width:`${(trial+1)/rounds*100}%`}}/></div><div className="arena">{state==='pause'?<div className="paused"><Pause/><h2>Paused</h2><button onClick={()=>setState('play')}>Resume</button></div>:<div className="grid">{[0,1,2,3,4,5,6,7,8].map(i=><i className={current?.pos===i?'lit':''}/>)}</div>}</div>
+ <div className="progress"><i style={{width:`${(trial+1)/rounds*100}%`}}/></div><div className="arena">{state==='pause'?<div className="paused"><Pause/><h2>Paused</h2><button onClick={()=>setState('play')}>Resume</button></div>:<div className="game-grid">{[0,1,2,3,4,5,6,7,8].map(i=><i className={current?.pos===i?'lit':''}/>)}</div>}</div>
  <div className="responses"><button className={hits.p.includes(trial)?'pressed':''} onClick={()=>respond('p')}><kbd>A</kbd><span><b>Position</b> visual match</span>{hits.p.includes(trial)&&<Check/>}</button><button className={hits.a.includes(trial)?'pressed':''} onClick={()=>respond('a')}><kbd>L</kbd><span><b>Sound</b> audio match</span>{hits.a.includes(trial)&&<Check/>}</button></div>
  <div className="heard"><Volume2/> Listen for the letter</div></section>
 }
