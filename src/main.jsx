@@ -1,6 +1,6 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {createRoot} from 'react-dom/client';
-import {ArrowLeft, BarChart3, Brain, Check, ChevronRight, Code2, Keyboard, Pause, Play, RotateCcw, Volume2, X} from 'lucide-react';
+import {ArrowLeft, BarChart3, Brain, Check, ChevronRight, Code2, HelpCircle, Keyboard, Pause, Play, RotateCcw, Volume2, X} from 'lucide-react';
 import './style.css';
 
 const LETTERS=['C','H','K','L','Q','R','S','T'];
@@ -10,18 +10,48 @@ const getHistory=()=>JSON.parse(localStorage.getItem('nback-history')||'[]');
 function App(){
   const [screen,setScreen]=useState('home'); const [n,setN]=useState(2); const [rounds,setRounds]=useState(20);
   const [history,setHistory]=useState(getHistory); const [dark,setDark]=useState(true);
+  const [tutorial,setTutorial]=useState(()=>!localStorage.getItem('nback-tutorial-seen'));
   const best=history.length?Math.max(...history.map(x=>x.score)):0;
   return <main className={dark?'dark':'light'}>
     <div className="grain"/>
     <header><button className="brand" onClick={()=>setScreen('home')}><span><Brain size={19}/></span>N/BACK</button><nav>
       <button className={screen==='stats'?'active':''} onClick={()=>setScreen('stats')}><BarChart3 size={17}/> Progress</button>
+      <button onClick={()=>setTutorial(true)}><HelpCircle size={17}/> How to play</button>
       <a href="https://github.com/rohannbajpai/nback" target="_blank" rel="noreferrer"><Code2 size={17}/> Source</a>
       <button className="icon" aria-label="Toggle theme" onClick={()=>setDark(!dark)}>{dark?'☼':'◐'}</button>
     </nav></header>
     {screen==='home'&&<Home n={n} setN={setN} rounds={rounds} setRounds={setRounds} best={best} onStart={()=>setScreen('game')}/>} 
     {screen==='game'&&<Game n={n} rounds={rounds} onExit={()=>setScreen('home')} onFinish={r=>{const h=[...history,r];localStorage.setItem('nback-history',JSON.stringify(h));setHistory(h);setScreen('stats')}}/>}
     {screen==='stats'&&<Stats history={history} onBack={()=>setScreen('home')} onPlay={()=>setScreen('game')}/>} 
+    {tutorial&&<Tutorial onClose={()=>{localStorage.setItem('nback-tutorial-seen','true');setTutorial(false)}} onPractice={()=>{localStorage.setItem('nback-tutorial-seen','true');setTutorial(false);setN(1);setRounds(15);setScreen('game')}}/>}
   </main>
+}
+
+function Tutorial({onClose,onPractice}){
+ const [step,setStep]=useState(0); const [pressed,setPressed]=useState(false);
+ const steps=[
+  {tag:'THE IDEA',title:'Compare now with before.',body:'Each turn gives you two signals: a square position and a spoken letter. Notice when either one matches the signal from N turns earlier.'},
+  {tag:'POSITION MATCH',title:'Same place, N turns later.',body:'If the square returns to the same cell it occupied N turns ago, press A—or tap Position. Ignore the letter for this decision.'},
+  {tag:'SOUND MATCH',title:'Same letter, N turns later.',body:'If the spoken letter matches the one from N turns ago, press L—or tap Sound. The square can be somewhere completely different.'},
+  {tag:'YOU’RE READY',title:'Track both. Respond to either.',body:'A turn can match position, sound, both, or neither. Only respond when you detect a match. Start with 1-back to learn the rhythm.'}
+ ];
+ const speak=()=>{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance('K');u.rate=.82;u.pitch=.9;speechSynthesis.speak(u)};
+ useEffect(()=>setPressed(false),[step]);
+ return <div className="tutorial-wrap" role="dialog" aria-modal="true" aria-label="How to play dual n-back"><div className="tutorial panel">
+  <div className="tutorial-top"><div className="tutorial-count"><span>GUIDE</span> 0{step+1} / 04</div><button className="tutorial-close" onClick={onClose} aria-label="Close tutorial"><X/></button></div>
+  <div className="tutorial-body"><div className="tutorial-copy"><small>{steps[step].tag}</small><h2>{steps[step].title}</h2><p>{steps[step].body}</p>
+   {step===0&&<div className="n-example"><span>NOW</span><b>N = 2</b><span>2 TURNS AGO</span></div>}
+   {step===1&&<button className={`demo-response ${pressed?'pressed':''}`} onClick={()=>setPressed(true)}><kbd>A</kbd><span><b>Position</b> Try it</span>{pressed&&<Check/>}</button>}
+   {step===2&&<button className="demo-response" onClick={speak}><Volume2/><span><b>Hear “K”</b> Play sound</span><Play/></button>}
+   {step===3&&<div className="match-summary"><span><i/> POSITION <kbd>A</kbd></span><span><i/> SOUND <kbd>L</kbd></span></div>}
+  </div><div className={`tutorial-visual step-${step}`}>
+   {step===0&&<><div className="signal-card past"><span>−2</span><i/><b>K</b></div><div className="trail">···</div><div className="signal-card now"><span>NOW</span><i/><b>K</b></div></>}
+   {step===1&&<><div className="mini-grid">{[0,1,2,3,4,5,6,7,8].map(i=><i key={i} className={i===2?'lit':''}/>)}</div><ArrowLeft/><div className="mini-grid faded">{[0,1,2,3,4,5,6,7,8].map(i=><i key={i} className={i===2?'lit':''}/>)}</div></>}
+   {step===2&&<div className="sound-rings"><i/><i/><i/><Volume2/><b>K</b></div>}
+   {step===3&&<div className="dual-lock"><Brain/><span>POSITION</span><i>+</i><span>SOUND</span></div>}
+  </div></div>
+  <div className="tutorial-foot"><div className="tutorial-dots">{steps.map((_,i)=><button key={i} className={i===step?'active':''} onClick={()=>setStep(i)} aria-label={`Tutorial step ${i+1}`}/>)}</div><div>{step>0&&<button className="text-button" onClick={()=>setStep(step-1)}>Back</button>}{step<3?<button className="next-button" onClick={()=>setStep(step+1)}>Next <ChevronRight/></button>:<button className="next-button" onClick={onPractice}>Start 1-back practice <Play fill="currentColor"/></button>}</div></div>
+ </div></div>
 }
 
 function Home({n,setN,rounds,setRounds,best,onStart}){return <section className="home page">
