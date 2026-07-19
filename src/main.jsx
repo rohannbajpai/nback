@@ -61,7 +61,6 @@ function Tutorial({onClose,onPractice}){
 }
 
 function Home({n,setN,rounds,setRounds,best,onStart}){return <section className="home page">
-  <div className="eyebrow"><i/> WORKING MEMORY, SHARPENED</div>
   <h1>Hold more.<br/><em>Think clearer.</em></h1>
   <p className="lede">A focused dual n-back practice for training attention and working memory—one signal at a time.</p>
   <div className="setup panel"><div className="setup-head"><div><small>YOUR SESSION</small><h2>Dual {n}-Back</h2></div><span className="session-time">≈ {Math.ceil(rounds*3/60)} min</span></div>
