@@ -28,29 +28,35 @@ function App(){
 }
 
 function Tutorial({onClose,onPractice}){
- const [step,setStep]=useState(0); const [pressed,setPressed]=useState(false);
- const steps=[
-  {tag:'THE IDEA',title:'Compare now with before.',body:'Each turn gives you two signals: a square position and a spoken letter. Notice when either one matches the signal from N turns earlier.'},
-  {tag:'POSITION MATCH',title:'Same place, N turns later.',body:'If the square returns to the same cell it occupied N turns ago, press A—or tap Position. Ignore the letter for this decision.'},
-  {tag:'SOUND MATCH',title:'Same letter, N turns later.',body:'If the spoken letter matches the one from N turns ago, press L—or tap Sound. The square can be somewhere completely different.'},
-  {tag:'YOU’RE READY',title:'Track both. Respond to either.',body:'A turn can match position, sound, both, or neither. Only respond when you detect a match. Start with 1-back to learn the rhythm.'}
+ const [stage,setStage]=useState(0); const [hits,setHits]=useState([]); const [feedback,setFeedback]=useState(''); const advancing=useRef(false);
+ const trials={1:{pos:2,letter:'H'},2:{pos:2,letter:'K'},3:{pos:6,letter:'Q'},4:{pos:1,letter:'Q'},5:{pos:4,letter:'T'},6:{pos:4,letter:'T'}};
+ const copy=[
+  ['KEYBOARD TUTORIAL','Learn by doing.','You’ll play three short 1-back examples. Keep your hands on A and L—there are no buttons to click.'],
+  ['POSITION · FIRST SIGNAL','Remember this square.','This is your first signal. There is nothing to match yet.'],
+  ['POSITION · YOUR TURN','Did the position repeat?','Compare this square with the previous one, then respond.'],
+  ['SOUND · FIRST SIGNAL','Remember the sound.','Listen to the letter. The square does not matter for this example.'],
+  ['SOUND · YOUR TURN','Did the sound repeat?','Compare the spoken letter with the previous one, then respond.'],
+  ['DUAL · FIRST SIGNAL','Now track both.','Remember the square position and the spoken letter together.'],
+  ['DUAL · YOUR TURN','What repeated?','Position and sound can both match on the same turn.'],
+  ['TUTORIAL COMPLETE','That’s dual n-back.','In a real session, respond only when position, sound, or both match N turns back.']
  ];
- const speak=()=>{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance('K');u.rate=.82;u.pitch=.9;speechSynthesis.speak(u)};
- useEffect(()=>setPressed(false),[step]);
- return <div className="tutorial-wrap" role="dialog" aria-modal="true" aria-label="How to play dual n-back"><div className="tutorial panel">
-  <div className="tutorial-top"><div className="tutorial-count"><span>GUIDE</span> 0{step+1} / 04</div><button className="tutorial-close" onClick={onClose} aria-label="Close tutorial"><X/></button></div>
-  <div className="tutorial-body"><div className="tutorial-copy"><small>{steps[step].tag}</small><h2>{steps[step].title}</h2><p>{steps[step].body}</p>
-   {step===0&&<div className="n-example"><span>NOW</span><b>N = 2</b><span>2 TURNS AGO</span></div>}
-   {step===1&&<button className={`demo-response ${pressed?'pressed':''}`} onClick={()=>setPressed(true)}><kbd>A</kbd><span><b>Position</b> Try it</span>{pressed&&<Check/>}</button>}
-   {step===2&&<button className="demo-response" onClick={speak}><Volume2/><span><b>Hear “K”</b> Play sound</span><Play/></button>}
-   {step===3&&<div className="match-summary"><span><i/> POSITION <kbd>A</kbd></span><span><i/> SOUND <kbd>L</kbd></span></div>}
-  </div><div className={`tutorial-visual step-${step}`}>
-   {step===0&&<><div className="signal-card past"><span>−2</span><i/><b>K</b></div><div className="trail">···</div><div className="signal-card now"><span>NOW</span><i/><b>K</b></div></>}
-   {step===1&&<><div className="mini-grid">{[0,1,2,3,4,5,6,7,8].map(i=><i key={i} className={i===2?'lit':''}/>)}</div><ArrowLeft/><div className="mini-grid faded">{[0,1,2,3,4,5,6,7,8].map(i=><i key={i} className={i===2?'lit':''}/>)}</div></>}
-   {step===2&&<div className="sound-rings"><i/><i/><i/><Volume2/><b>K</b></div>}
-   {step===3&&<div className="dual-lock"><Brain/><span>POSITION</span><i>+</i><span>SOUND</span></div>}
-  </div></div>
-  <div className="tutorial-foot"><div className="tutorial-dots">{steps.map((_,i)=><button key={i} className={i===step?'active':''} onClick={()=>setStep(i)} aria-label={`Tutorial step ${i+1}`}/>)}</div><div>{step>0&&<button className="text-button" onClick={()=>setStep(step-1)}>Back</button>}{step<3?<button className="next-button" onClick={()=>setStep(step+1)}>Next <ChevronRight/></button>:<button className="next-button" onClick={onPractice}>Start 1-back practice <Play fill="currentColor"/></button>}</div></div>
+ const speak=()=>{const trial=trials[stage];if(!trial)return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(trial.letter);u.rate=.82;u.pitch=.9;speechSynthesis.speak(u)};
+ const advance=()=>{if(advancing.current)return;advancing.current=true;setFeedback('Correct');setTimeout(()=>{setStage(s=>s+1);setHits([]);setFeedback('');advancing.current=false},450)};
+ useEffect(()=>{if(trials[stage])speak()},[stage]);
+ useEffect(()=>{const key=e=>{const k=e.key.toLowerCase();if(k==='escape'){onClose();return}if(k==='r'){speak();return}if(e.code==='Space'){e.preventDefault();if([0,1,3,5].includes(stage)){setStage(s=>s+1);setFeedback('');return}if(stage===7){onPractice();return}setFeedback('Use the match key');return}if(!['a','l'].includes(k))return;
+   if(stage===2){if(k==='a')advance();else setFeedback('Sound did not repeat')}
+   else if(stage===4){if(k==='l')advance();else setFeedback('Position did not repeat')}
+   else if(stage===6){const next=[...new Set([...hits,k])];setHits(next);if(next.length===2)advance();else setFeedback(`${k==='a'?'Position':'Sound'} match — one more`) }
+   else setFeedback('No response needed yet');
+  };addEventListener('keydown',key);return()=>removeEventListener('keydown',key)},[stage,hits]);
+ const activePos=trials[stage]?.pos;
+ return <div className="tutorial-wrap" role="dialog" aria-modal="true" aria-label="Interactive keyboard tutorial"><div className="key-tutorial panel">
+  <div className="key-tutorial-top"><div><span>INTERACTIVE GUIDE</span><b>{String(stage+1).padStart(2,'0')} / 08</b></div><div><kbd>R</kbd> repeat sound <kbd>ESC</kbd> exit</div></div>
+  <div className="key-tutorial-main"><div className="key-copy"><small>{copy[stage][0]}</small><h2>{copy[stage][1]}</h2><p>{copy[stage][2]}</p><div className={`key-feedback ${feedback==='Correct'?'success':''}`}>{feedback||' '}</div></div>
+   <div className="key-stage">{stage===0||stage===7?<div className="tutorial-brain"><Brain/><i/></div>:<><div className="practice-grid">{[0,1,2,3,4,5,6,7,8].map(i=><i key={i} className={i===activePos?'lit':''}/>)}</div><div className="spoken"><Volume2/> LETTER SPOKEN</div></>}</div>
+  </div>
+  <div className="key-tutorial-foot"><div className="response-keys"><div className={hits.includes('a')?'active':''}><kbd>A</kbd><span><b>POSITION</b> visual match</span></div><div className={hits.includes('l')?'active':''}><kbd>L</kbd><span><b>SOUND</b> audio match</span></div></div><div className="key-prompt">{[0,1,3,5,7].includes(stage)?<><span>PRESS</span><kbd>SPACE</kbd><b>{stage===7?'START PRACTICE':'CONTINUE'}</b></>:<><span>RESPOND WITH</span><kbd>{stage===2?'A':stage===4?'L':'A + L'}</kbd></>}</div></div>
+  <div className="stage-progress"><i style={{width:`${(stage+1)/8*100}%`}}/></div>
  </div></div>
 }
 
