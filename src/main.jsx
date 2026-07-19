@@ -101,8 +101,20 @@ function Game({n,rounds,onExit,onFinish}){
  <div className="heard"><Volume2/> Listen for the letter</div></section>
 }
 
-function Stats({history,onBack,onPlay}){const last=history.at(-1),avg=history.length?Math.round(history.reduce((s,x)=>s+x.score,0)/history.length):0;return <section className="stats page"><button className="back" onClick={onBack}><ArrowLeft/> Home</button><div className="stats-head"><div><div className="eyebrow"><i/> YOUR PROGRESS</div><h1>{last?'Session complete.':'Start your practice.'}</h1><p>{last?'A little steadier every time. Your results stay privately on this device.':'Complete a session to see your scores here.'}</p></div>{last&&<button className="primary" onClick={onPlay}><RotateCcw/> Train again</button>}</div>
- <div className="score-grid"><div className="score panel"><small>LATEST ACCURACY</small><strong>{last?.score??'—'}<sup>{last&&'%'}</sup></strong><span className={last?.score>=80?'good':''}>{last?.score>=80?'Strong session':'Keep practicing'}</span></div><div className="metric panel"><small>ALL-TIME AVERAGE</small><b>{avg || '—'}{avg?'%':''}</b><small>SESSIONS</small><b>{history.length}</b></div></div>
- <div className="history panel"><h2>Session history</h2>{history.length===0?<p className="empty">No sessions yet. Your scores will appear here.</p>:history.slice().reverse().map((x,i)=><div className="row"><span>#{history.length-i}</span><b>Dual {x.n}-Back</b><time>{new Date(x.date).toLocaleDateString(undefined,{month:'short',day:'numeric'})}</time><strong>{x.score}%</strong></div>)}</div></section>}
+function Stats({history,onBack,onPlay}){
+ const last=history.at(-1),avg=history.length?Math.round(history.reduce((s,x)=>s+x.score,0)/history.length):0;
+ return <section className="page mx-auto w-full max-w-[1180px] px-6 py-10 lg:px-10 lg:py-12">
+  <button className="flex items-center gap-2 text-sm text-[var(--muted)] transition-colors hover:text-[var(--text)]" onClick={onBack}><ArrowLeft size={17}/> Home</button>
+  <div className="mt-11 flex flex-col items-start justify-between gap-8 md:flex-row md:items-end">
+   <div><div className="eyebrow"><i/> YOUR PROGRESS</div><div className="mt-6 text-[clamp(3.25rem,5.5vw,5rem)] leading-[.95] tracking-[-.055em]">{last?'Session complete.':'Start your practice.'}</div><p className="mt-5 text-sm text-[var(--muted)]">{last?'A little steadier every time. Your results stay privately on this device.':'Complete a session to see your scores here.'}</p></div>
+   {last&&<button className="flex h-14 shrink-0 items-center justify-center gap-3 bg-[var(--lime)] px-8 font-bold text-[var(--black)] transition-transform hover:-translate-y-0.5" onClick={onPlay}><RotateCcw size={19}/> Train again</button>}
+  </div>
+  <div className="mt-12 grid gap-4 md:grid-cols-[2fr_1fr]">
+   <div className="flex min-h-72 flex-col border border-[var(--line)] bg-[var(--panel)] p-9"><small>LATEST ACCURACY</small><div className="mt-8 font-mono text-8xl font-medium tracking-[-.07em]">{last?.score??'—'}{last&&<sup className="ml-2 text-3xl">%</sup>}</div><span className={`mt-auto text-xs ${last?.score>=80?'text-[var(--lime)]':'text-[var(--muted)]'}`}>{last?.score>=80?'Strong session':'Keep practicing'}</span></div>
+   <div className="grid min-h-72 grid-cols-2 border border-[var(--line)] bg-[var(--panel)] p-9 md:grid-cols-1 md:grid-rows-2"><div className="flex flex-col justify-between pb-6 md:border-b md:border-[var(--line)]"><small>ALL-TIME AVERAGE</small><b className="font-mono text-4xl font-medium">{avg || '—'}{avg?'%':''}</b></div><div className="flex flex-col justify-between pl-6 md:pt-6 md:pl-0"><small>SESSIONS</small><b className="font-mono text-4xl font-medium">{history.length}</b></div></div>
+  </div>
+  <div className="mt-4 border border-[var(--line)] bg-[var(--panel)] p-8"><h2 className="m-0 text-2xl">Session history</h2>{history.length===0?<p className="mt-6 text-sm text-[var(--muted)]">No sessions yet. Your scores will appear here.</p>:<div className="mt-7">{history.slice().reverse().map((x,i)=><div key={`${x.date}-${i}`} className="grid grid-cols-[42px_1fr_80px_50px] items-center border-t border-[var(--line)] py-4 text-xs sm:grid-cols-[60px_1fr_120px_60px]"><span className="text-[var(--muted)]">#{history.length-i}</span><b>Dual {x.n}-Back</b><time className="text-[var(--muted)]">{new Date(x.date).toLocaleDateString(undefined,{month:'short',day:'numeric'})}</time><strong className="text-right font-mono text-base">{x.score}%</strong></div>)}</div>}</div>
+ </section>
+}
 
 createRoot(document.getElementById('root')).render(<App/>);
