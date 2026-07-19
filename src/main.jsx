@@ -67,7 +67,7 @@ function Home({n,setN,rounds,setRounds,best,onStart}){return <section className=
   <div className="setup panel"><div className="setup-head"><div><small>YOUR SESSION</small><h2>Dual {n}-Back</h2></div><span className="session-time">≈ {Math.ceil(rounds*3/60)} min</span></div>
     <div className="controls"><label>Difficulty <span>Match {n} steps back</span><div className="stepper"><button onClick={()=>setN(clamp(n-1,1,5))}>−</button><b>{n}</b><button onClick={()=>setN(clamp(n+1,1,5))}>+</button></div></label>
     <label>Trials <span>Length of session</span><div className="pills">{[15,20,30].map(x=><button className={rounds===x?'chosen':''} onClick={()=>setRounds(x)}>{x}</button>)}</div></label></div>
-    <button className="primary" onClick={onStart}><Play fill="currentColor" size={17}/> Begin session <ChevronRight size={18}/></button>
+    <button className="primary justify-start! px-5!" onClick={onStart}><Play className="shrink-0" fill="currentColor" size={17}/> <span>Begin session</span> <ChevronRight className="mr-0! ml-auto! shrink-0" size={18}/></button>
     <p className="keys"><Keyboard size={15}/> During play: <kbd>A</kbd> position match · <kbd>L</kbd> sound match</p>
   </div>
   <div className="side-note"><span>01</span><p><b>Two streams. One focus.</b><br/>Watch the position. Hear the letter. Respond when either repeats from {n} turns ago.</p></div>
